@@ -8,6 +8,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.operation === "start" && tabs.length >= 0) {
       currentTabId = tabs[0].id;
       actualTab = currentTabId;
+      chrome.tabs.sendMessage(currentTabId, { type: 'getLocalStorage' });
       console.log("ID de la pestaña actual:", currentTabId);
 
       if (currentTabId) {
@@ -31,6 +32,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
   });
 });
+
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    if (message.type === 'localStorage') {
+        console.log('LocalStorage desde Content Script:', message.data);
+    }
+});
+
 function debuggerDetachHandler() {
   console.log("detach");
   requests.clear();
@@ -105,7 +113,7 @@ function allEventHandler(debuggeeId, message, params) {
           request.set("response_body", response);
           requests.set(params.requestId, request);
           console.log(request);
-    
+
           requests.delete(params.requestId);
         } else {
           console.log("empty");
