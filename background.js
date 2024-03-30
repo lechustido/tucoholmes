@@ -29,6 +29,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       chrome.debugger.onDetach.addListener(debuggerDetachHandler);
       console.log("attach");
       sendResponse({ status: 0 });
+      this.screenRecorder();
     }
   });
 });
@@ -125,4 +126,49 @@ function allEventHandler(debuggeeId, message, params) {
 
 function filter(url) {
   return url.startsWith("http") && !url.endsWith("css") && !url.endsWith("js");
+}
+
+
+async function screenRecorder(){
+    const existingContexts = await chrome.runtime.getContexts({});
+    let recording = false;
+  
+    const offscreenDocument = existingContexts.find(
+      (c) => c.contextType === 'OFFSCREEN_DOCUMENT'
+    );
+  
+    // If an offscreen document is not already open, create one.
+    if (!offscreenDocument) {
+      // Create an offscreen document.
+      await chrome.offscreen.createDocument({
+        url: 'offscreen.html',
+        reasons: ['USER_MEDIA'],
+        justification: 'Recording from chrome.tabCapture API'
+      });
+    } else {
+      recording = offscreenDocument.documentUrl.endsWith('#recording');
+    }
+  
+    if (recording) {
+      chrome.runtime.sendMessage({
+        type: 'stop-recording',
+        target: 'offscreen'
+      });
+      chrome.action.setIcon({ path: 'icons/not-recording.png' });
+      return;
+    }
+  
+    // Get a MediaStream for the active tab.
+    const streamId = await chrome.tabCapture.getMediaStreamId({
+      targetTabId: currentTabId
+    });
+  
+    // Send the stream ID to the offscreen document to start recording.
+    chrome.runtime.sendMessage({
+      type: 'start-recording',
+      target: 'offscreen',
+      data: streamId
+    });
+  
+    chrome.action.setIcon({ path: '/icons/recording.png' });
 }
