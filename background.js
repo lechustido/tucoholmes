@@ -27,9 +27,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         onAttach.bind(null, currentTabId)
       );
       chrome.debugger.onDetach.addListener(debuggerDetachHandler);
-      console.log("attach");
       sendResponse({ status: 0 });
       this.screenRecorder();
+    }else if(request.operation === "stop"){
+      this.screenRecorder();
+      this.onDetach();
     }
   });
 });
@@ -41,19 +43,21 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
 });
 
 function debuggerDetachHandler() {
-  console.log("detach");
   requests.clear();
 }
 function onAttach(tabId) {
   chrome.debugger.sendCommand(
     {
-      //first enable the Network
       tabId: tabId,
     },
     "Network.enable"
   );
 
   chrome.debugger.onEvent.addListener(allEventHandler);
+}
+
+function onDetach() {
+  chrome.debugger.onEvent.removeListener();
 }
 // https://chromedevtools.github.io/devtools-protocol/tot/Network
 function allEventHandler(debuggeeId, message, params) {
@@ -154,7 +158,6 @@ async function screenRecorder(){
         type: 'stop-recording',
         target: 'offscreen'
       });
-      chrome.action.setIcon({ path: 'icons/not-recording.png' });
       return;
     }
   
@@ -169,6 +172,4 @@ async function screenRecorder(){
       target: 'offscreen',
       data: streamId
     });
-  
-    chrome.action.setIcon({ path: '/icons/recording.png' });
 }

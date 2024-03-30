@@ -1,5 +1,4 @@
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-    debugger
     if (message.type === 'getLocalStorage') {
         // Obtener el localStorage
         const localStorageData = { ...localStorage }; // Copiar el localStorage a un objeto
