@@ -1,15 +1,19 @@
 let currentTabId;
 let version = "1.0";
 let server = "http://127.0.0.1:6789";
+let consoleLogs = [];
 const requests = new Map();
+let isRecording = false;
 
+//#region Listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     if (request.operation === "start" && tabs.length >= 0) {
+      isRecording = true;
       currentTabId = tabs[0].id;
       actualTab = currentTabId;
       chrome.tabs.sendMessage(currentTabId, { type: 'getLocalStorage' });
-      console.log("ID de la pestaña actual:", currentTabId);
+      chrome.tabs.sendMessage(currentTabId, { type: 'startReadingConsole' });
 
       if (currentTabId) {
         chrome.debugger.detach({ tabId: currentTabId });
@@ -32,16 +36,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }else if(request.operation === "stop"){
       this.screenRecorder();
       this.onDetach();
+      chrome.tabs.sendMessage(currentTabId, { type: 'stopReadingConsole' });
+      isRecording = false;
     }
   });
 });
-
+//#endregion Listener
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     if (message.type === 'localStorage') {
         console.log('LocalStorage desde Content Script:', message.data);
     }
 });
 
+//#region Llamadas http
 function debuggerDetachHandler() {
   requests.clear();
 }
@@ -57,9 +64,8 @@ function onAttach(tabId) {
 }
 
 function onDetach() {
-  chrome.debugger.onEvent.removeListener();
+  chrome.debugger.detach({ tabId: currentTabId });
 }
-// https://chromedevtools.github.io/devtools-protocol/tot/Network
 function allEventHandler(debuggeeId, message, params) {
   if (currentTabId != debuggeeId.tabId) {
     return;
@@ -129,10 +135,11 @@ function allEventHandler(debuggeeId, message, params) {
 }
 
 function filter(url) {
-  return url.startsWith("http") && !url.endsWith("css") && !url.endsWith("js");
+  return url.startsWith("https") && !url.endsWith("css") && !url.endsWith("js");
 }
+//#endregion Llamadas http
 
-
+//#region Grabar la pantalla
 async function screenRecorder(){
     const existingContexts = await chrome.runtime.getContexts({});
     let recording = false;
@@ -173,3 +180,13 @@ async function screenRecorder(){
       data: streamId
     });
 }
+//#endregion Grabar la pantalla
+
+//#region Obtener los datos de la consola
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === 'consolelog' && isRecording === true) {
+    consoleLogs.push(request.data[0]);
+    console.log(consoleLogs)
+  }
+});
+//#endregion Obtener los datos de la consola

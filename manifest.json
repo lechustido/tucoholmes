@@ -23,5 +23,11 @@
       "matches": ["<all_urls>"],
       "js": ["contentScript.js"]
     }
-  ]
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["inject.js"],
+      "matches": ["<all_urls>"]
+    }
+]
 }
