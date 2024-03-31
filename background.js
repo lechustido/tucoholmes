@@ -1,9 +1,14 @@
 let currentTabId;
 let version = "1.0";
 let server = "http://127.0.0.1:6789";
-let consoleLogs = [];
 const requests = new Map();
 let isRecording = false;
+
+let sesionData = {};
+sesionData.consoleLogs = [];
+sesionData.consoleError = [];
+sesionData.localStorage = {};
+sesionData.requests = [];
 
 //#region Listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -12,8 +17,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       isRecording = true;
       currentTabId = tabs[0].id;
       actualTab = currentTabId;
-      chrome.tabs.sendMessage(currentTabId, { type: 'getLocalStorage' });
-      chrome.tabs.sendMessage(currentTabId, { type: 'startReadingConsole' });
+      chrome.tabs.sendMessage(currentTabId, { type: "getLocalStorage" });
+      chrome.tabs.sendMessage(currentTabId, { type: "startReadingConsole" });
 
       if (currentTabId) {
         chrome.debugger.detach({ tabId: currentTabId });
@@ -33,19 +38,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       chrome.debugger.onDetach.addListener(debuggerDetachHandler);
       sendResponse({ status: 0 });
       this.screenRecorder();
-    }else if(request.operation === "stop"){
+    } else if (request.operation === "stop") {
       this.screenRecorder();
       this.onDetach();
-      chrome.tabs.sendMessage(currentTabId, { type: 'stopReadingConsole' });
+      chrome.tabs.sendMessage(currentTabId, { type: "stopReadingConsole" });
       isRecording = false;
+      console.log(sesionData)
     }
   });
 });
 //#endregion Listener
-chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-    if (message.type === 'localStorage') {
-        console.log('LocalStorage desde Content Script:', message.data);
-    }
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+  if (message.type === "localStorage") {
+    sesionData.localStorage = message.data;
+  }
 });
 
 //#region Llamadas http
@@ -121,11 +127,19 @@ function allEventHandler(debuggeeId, message, params) {
       },
       function (response) {
         if (response) {
+          let newRequestData = {};
           request.set("response_body", response);
           requests.set(params.requestId, request);
-          console.log(request);
-
+          var values = Array.from(request.values());
+          newRequestData.headers = values[0].headers;
+          newRequestData.url = values[0].url;
+          newRequestData.method = values[0].method;
+          newRequestData.response = values[3].body;
+          sesionData.requests.push(newRequestData);
+        
           requests.delete(params.requestId);
+
+         
         } else {
           console.log("empty");
         }
@@ -140,53 +154,52 @@ function filter(url) {
 //#endregion Llamadas http
 
 //#region Grabar la pantalla
-async function screenRecorder(){
-    const existingContexts = await chrome.runtime.getContexts({});
-    let recording = false;
-  
-    const offscreenDocument = existingContexts.find(
-      (c) => c.contextType === 'OFFSCREEN_DOCUMENT'
-    );
-  
-    // If an offscreen document is not already open, create one.
-    if (!offscreenDocument) {
-      // Create an offscreen document.
-      await chrome.offscreen.createDocument({
-        url: 'offscreen.html',
-        reasons: ['USER_MEDIA'],
-        justification: 'Recording from chrome.tabCapture API'
-      });
-    } else {
-      recording = offscreenDocument.documentUrl.endsWith('#recording');
-    }
-  
-    if (recording) {
-      chrome.runtime.sendMessage({
-        type: 'stop-recording',
-        target: 'offscreen'
-      });
-      return;
-    }
-  
-    // Get a MediaStream for the active tab.
-    const streamId = await chrome.tabCapture.getMediaStreamId({
-      targetTabId: currentTabId
+async function screenRecorder() {
+  const existingContexts = await chrome.runtime.getContexts({});
+  let recording = false;
+
+  const offscreenDocument = existingContexts.find(
+    (c) => c.contextType === "OFFSCREEN_DOCUMENT"
+  );
+
+  // If an offscreen document is not already open, create one.
+  if (!offscreenDocument) {
+    // Create an offscreen document.
+    await chrome.offscreen.createDocument({
+      url: "offscreen.html",
+      reasons: ["USER_MEDIA"],
+      justification: "Recording from chrome.tabCapture API",
     });
-  
-    // Send the stream ID to the offscreen document to start recording.
+  } else {
+    recording = offscreenDocument.documentUrl.endsWith("#recording");
+  }
+
+  if (recording) {
     chrome.runtime.sendMessage({
-      type: 'start-recording',
-      target: 'offscreen',
-      data: streamId
+      type: "stop-recording",
+      target: "offscreen",
     });
+    return;
+  }
+
+  // Get a MediaStream for the active tab.
+  const streamId = await chrome.tabCapture.getMediaStreamId({
+    targetTabId: currentTabId,
+  });
+
+  // Send the stream ID to the offscreen document to start recording.
+  chrome.runtime.sendMessage({
+    type: "start-recording",
+    target: "offscreen",
+    data: streamId,
+  });
 }
 //#endregion Grabar la pantalla
 
 //#region Obtener los datos de la consola
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === 'consolelog' && isRecording === true) {
-    consoleLogs.push(request.data[0]);
-    console.log(consoleLogs)
+  if (request.type === "consolelog" && isRecording === true) {
+    sesionData.consoleLogs.push(request.data[0]);
   }
 });
 //#endregion Obtener los datos de la consola
