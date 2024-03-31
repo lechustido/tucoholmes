@@ -200,6 +200,8 @@ async function screenRecorder() {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === "consolelog" && isRecording === true) {
     sesionData.consoleLogs.push(request.data[0]);
+  }else if(request.type === "consoleError" && isRecording === true){
+    sesionData.consoleError.push(request.data[0]);
   }
 });
 //#endregion Obtener los datos de la consola

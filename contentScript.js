@@ -19,6 +19,11 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
               type: "consolelog",
               data: event.data.logs,
             });
+          }else if (event.data.type && event.data.type == "FROM_PAGE_ERROR") {
+            chrome.runtime.sendMessage({
+              type: "consoleError",
+              data: event.data.logs,
+            });
           }
         },
         false
