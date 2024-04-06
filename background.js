@@ -201,7 +201,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === "consolelog" && isRecording === true) {
     sesionData.consoleLogs.push(request.data[0]);
   }else if(request.type === "consoleError" && isRecording === true){
-    sesionData.consoleError.push(request.data[0]);
+    sesionData.consoleError.push(request.data);
   }
 });
 //#endregion Obtener los datos de la consola
@@ -220,3 +220,4 @@ chrome.runtime.onMessageExternal.addListener(function(message, sender, sendRespo
     sendResponse({ received: true });
   }
 });
+

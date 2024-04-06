@@ -19,11 +19,6 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
               type: "consolelog",
               data: event.data.logs,
             });
-          }else if (event.data.type && event.data.type == "FROM_PAGE_ERROR") {
-            chrome.runtime.sendMessage({
-              type: "consoleError",
-              data: event.data.logs,
-            });
           }
         },
         false
@@ -39,4 +34,15 @@ script.src = chrome.runtime.getURL("inject.js");
 script.onload = function () {
   this.remove();
 };
+
+
+window.addEventListener("message", function (event) {
+  if(event.data.type === "FROM_PAGE_ERROR"){
+    let dataTosend = event.data.logs[1].stack !== undefined ? event.data.logs[1].stack : event.data.logs[1].message;
+    chrome.runtime.sendMessage({
+      type: "consoleError",
+      data: dataTosend,
+    });
+  }
+})
 
