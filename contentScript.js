@@ -39,3 +39,4 @@ script.src = chrome.runtime.getURL("inject.js");
 script.onload = function () {
   this.remove();
 };
+

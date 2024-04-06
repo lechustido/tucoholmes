@@ -205,3 +205,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 //#endregion Obtener los datos de la consola
+
+
+chrome.runtime.onMessageExternal.addListener(function(message, sender, sendResponse) {
+  debugger
+  if (message.type === 'FROM_PAGE_ERROR') {
+    // Recibe los logs del mensaje
+    const logs = message.logs;
+    
+    // Puedes hacer algo con los logs, como imprimirlos en la consola
+    console.error('Error desde la página:', logs);
+    
+    // Envía una respuesta si es necesario
+    sendResponse({ received: true });
+  }
+});
