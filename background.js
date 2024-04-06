@@ -208,7 +208,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 
 chrome.runtime.onMessageExternal.addListener(function(message, sender, sendResponse) {
-  debugger
   if (message.type === 'FROM_PAGE_ERROR') {
     // Recibe los logs del mensaje
     const logs = message.logs;

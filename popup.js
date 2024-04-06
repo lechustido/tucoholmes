@@ -17,7 +17,6 @@ startRecordElement.addEventListener("click", (e) => {
   (async () => {
     startRecordElement.style.display = "none";
     stopRecordElement.style.display = "block";
-    debugger;
     chrome.storage.local.set({ state: "recording" });
     const response = await chrome.runtime.sendMessage({ operation: "start" });
   })();
