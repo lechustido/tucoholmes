@@ -13,16 +13,16 @@
 // limitations under the License.
 
 chrome.runtime.onMessage.addListener(async (message) => {
-  if (message.target === 'offscreen') {
+  if (message.target === "offscreen") {
     switch (message.type) {
-      case 'start-recording':
+      case "start-recording":
         startRecording(message.data);
         break;
-      case 'stop-recording':
+      case "stop-recording":
         stopRecording();
         break;
       default:
-        throw new Error('Unrecognized message:', message.type);
+        throw new Error("Unrecognized message:", message.type);
     }
   }
 });
@@ -31,23 +31,23 @@ let recorder;
 let data = [];
 
 async function startRecording(streamId) {
-  if (recorder?.state === 'recording') {
-    throw new Error('Called startRecording while recording is in progress.');
+  if (recorder?.state === "recording") {
+    throw new Error("Called startRecording while recording is in progress.");
   }
 
   const media = await navigator.mediaDevices.getUserMedia({
     audio: {
       mandatory: {
-        chromeMediaSource: 'tab',
-        chromeMediaSourceId: streamId
-      }
+        chromeMediaSource: "tab",
+        chromeMediaSourceId: streamId,
+      },
     },
     video: {
       mandatory: {
-        chromeMediaSource: 'tab',
-        chromeMediaSourceId: streamId
-      }
-    }
+        chromeMediaSource: "tab",
+        chromeMediaSourceId: streamId,
+      },
+    },
   });
 
   // Continue to play the captured audio to the user.
@@ -56,11 +56,19 @@ async function startRecording(streamId) {
   source.connect(output.destination);
 
   // Start recording.
-  recorder = new MediaRecorder(media, { mimeType: 'video/webm' });
+  recorder = new MediaRecorder(media, { mimeType: "video/webm" });
   recorder.ondataavailable = (event) => data.push(event.data);
   recorder.onstop = () => {
-    const blob = new Blob(data, { type: 'video/webm' });
-    window.open(URL.createObjectURL(blob), '_blank');
+    const blob = new Blob(data, { type: "video/webm" });
+    const reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onloadend = function () {
+      chrome.runtime.sendMessage({
+        type: "recordingComplete",
+        data: reader.result,
+      });
+    };
+    // window.open(URL.createObjectURL(blob), '_blank');  // Elimina esta línea
 
     // Clear state ready for next recording
     recorder = undefined;
@@ -74,7 +82,7 @@ async function startRecording(streamId) {
   // store that directly in the service worker as it may be terminated while
   // recording is in progress. We could write it to storage but that slightly
   // increases the risk of things getting out of sync.
-  window.location.hash = 'recording';
+  window.location.hash = "recording";
 }
 
 async function stopRecording() {
@@ -84,11 +92,9 @@ async function stopRecording() {
   recorder.stream.getTracks().forEach((t) => t.stop());
 
   // Update current state in URL
-  window.location.hash = '';
+  window.location.hash = "";
 
-  // Note: In a real extension, you would want to write the recording to a more
-  // permanent location (e.g IndexedDB) and then close the offscreen document,
-  // to avoid keeping a document around unnecessarily. Here we avoid that to
-  // make sure the browser keeps the Object URL we create (see above) and to
-  // keep the sample fairly simple to follow.
+  // Clear state ready for next recording
+  recorder = undefined;
+  data = [];
 }

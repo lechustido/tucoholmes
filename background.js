@@ -43,7 +43,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       this.onDetach();
       chrome.tabs.sendMessage(currentTabId, { type: "stopReadingConsole" });
       isRecording = false;
-      console.log(sesionData)
     }
   });
 });
@@ -220,3 +219,11 @@ chrome.runtime.onMessageExternal.addListener(function(message, sender, sendRespo
   }
 });
 
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+  if (message.type === 'recordingComplete') {
+   // console.log('Video en Base64:', message.data);
+   sesionData.video = message.data
+    console.log(sesionData)
+    // Aquí puedes hacer algo con el video en base64, como guardarlo o procesarlo.
+  }
+});
