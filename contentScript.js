@@ -43,6 +43,16 @@ window.addEventListener("message", function (event) {
       type: "consoleError",
       data: dataTosend,
     });
+  }else if(event.data.type === "FROM_PAGE_LOG"){
+    debugger
+    let dataTosend = event.data.logs[0];
+    if(dataTosend !== ''){
+      chrome.runtime.sendMessage({
+        type: "consoleLog",
+        data: dataTosend,
+      });
+    }
+
   }
 })
 

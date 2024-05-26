@@ -197,8 +197,9 @@ async function screenRecorder() {
 
 //#region Obtener los datos de la consola
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === "consolelog" && isRecording === true) {
-    sesionData.consoleLogs.push(request.data[0]);
+  debugger
+  if (request.type === "consoleLog" && isRecording === true) {
+    sesionData.consoleLogs.push(request.data);
   }else if(request.type === "consoleError" && isRecording === true){
     sesionData.consoleError.push(request.data);
   }
@@ -207,6 +208,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 
 chrome.runtime.onMessageExternal.addListener(function(message, sender, sendResponse) {
+  debugger
   if (message.type === 'FROM_PAGE_ERROR') {
     // Recibe los logs del mensaje
     const logs = message.logs;
@@ -224,6 +226,7 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
    // console.log('Video en Base64:', message.data);
    sesionData.video = message.data
     console.log(sesionData)
+    console.log(JSON.stringify(sesionData))
     // Aquí puedes hacer algo con el video en base64, como guardarlo o procesarlo.
   }
 });
