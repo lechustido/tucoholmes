@@ -44,7 +44,6 @@ window.addEventListener("message", function (event) {
       data: dataTosend,
     });
   }else if(event.data.type === "FROM_PAGE_LOG"){
-    debugger
     let dataTosend = event.data.logs[0];
     if(dataTosend !== ''){
       chrome.runtime.sendMessage({

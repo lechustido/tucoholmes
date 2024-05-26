@@ -197,7 +197,6 @@ async function screenRecorder() {
 
 //#region Obtener los datos de la consola
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  debugger
   if (request.type === "consoleLog" && isRecording === true) {
     sesionData.consoleLogs.push(request.data);
   }else if(request.type === "consoleError" && isRecording === true){
@@ -208,7 +207,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 
 chrome.runtime.onMessageExternal.addListener(function(message, sender, sendResponse) {
-  debugger
   if (message.type === 'FROM_PAGE_ERROR') {
     // Recibe los logs del mensaje
     const logs = message.logs;
