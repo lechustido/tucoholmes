@@ -13,7 +13,7 @@ sesionData.requests = [];
 //#region Listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    if (request.operation === "start" && tabs.length >= 0) {
+    if (request.operation === "start" && tabs.length > 0) {
       isRecording = true;
       currentTabId = tabs[0].id;
       actualTab = currentTabId;
@@ -39,10 +39,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ status: 0 });
       this.screenRecorder();
     } else if (request.operation === "stop") {
+      chrome.tabs.sendMessage(currentTabId, { type: "stopReadingConsole" });
       this.screenRecorder();
       this.onDetach();
       chrome.tabs.sendMessage(currentTabId, { type: "stopReadingConsole" });
       isRecording = false;
+    }else if(tabs.length === 0){
+      console.log('sin pestañas activas')
     }
   });
 });
@@ -126,6 +129,7 @@ function allEventHandler(debuggeeId, message, params) {
       },
       function (response) {
         if (response) {
+          
           let newRequestData = {};
           request.set("response_body", response);
           requests.set(params.requestId, request);
@@ -206,7 +210,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 //#endregion Obtener los datos de la consola
 
 
-chrome.runtime.onMessageExternal.addListener(function(message, sender, sendResponse) {
+/*chrome.runtime.onMessageExternal.addListener(function(message, sender, sendResponse) {
   if (message.type === 'FROM_PAGE_ERROR') {
     // Recibe los logs del mensaje
     const logs = message.logs;
@@ -217,7 +221,7 @@ chrome.runtime.onMessageExternal.addListener(function(message, sender, sendRespo
     // Envía una respuesta si es necesario
     sendResponse({ received: true });
   }
-});
+});*/
 
 chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
   if (message.type === 'recordingComplete') {
@@ -225,6 +229,11 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
    sesionData.video = message.data
     console.log(sesionData)
     console.log(JSON.stringify(sesionData))
+    sesionData = {};
+    sesionData.consoleLogs = [];
+    sesionData.consoleError = [];
+    sesionData.localStorage = {};
+    sesionData.requests = [];
     // Aquí puedes hacer algo con el video en base64, como guardarlo o procesarlo.
   }
 });

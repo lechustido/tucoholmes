@@ -1,3 +1,5 @@
+let readConsole = false;
+var script
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.type === "getLocalStorage") {
     // Obtener el localStorage
@@ -8,6 +10,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
       data: localStorageData,
     });
   }else if(message.type === "startReadingConsole"){
+    readConsole = true;
     window.addEventListener(
         "message",
         function (event) {
@@ -24,10 +27,10 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         false
       );
   }
- 
 });
 
-var script = document.createElement("script");
+debugger
+script = document.createElement("script");
 
 script.src = chrome.runtime.getURL("inject.js");
 (document.head || document.documentElement).appendChild(script);
@@ -37,21 +40,24 @@ script.onload = function () {
 
 
 window.addEventListener("message", function (event) {
-  if(event.data.type === "FROM_PAGE_ERROR"){
-    let dataTosend = event.data.logs[1].stack !== undefined ? event.data.logs[1].stack : event.data.logs[1].message;
-    chrome.runtime.sendMessage({
-      type: "consoleError",
-      data: dataTosend,
-    });
-  }else if(event.data.type === "FROM_PAGE_LOG"){
-    let dataTosend = event.data.logs[0];
-    if(dataTosend !== ''){
+  if(readConsole === true){
+    if(event.data.type === "FROM_PAGE_ERROR"){
+      let dataTosend = event.data.logs[1].stack !== undefined ? event.data.logs[1].stack : event.data.logs[1].message;
       chrome.runtime.sendMessage({
-        type: "consoleLog",
+        type: "consoleError",
         data: dataTosend,
       });
+    }else if(event.data.type === "FROM_PAGE_LOG"){
+      let dataTosend = event.data.logs[0];
+      if(dataTosend !== ''){
+        chrome.runtime.sendMessage({
+          type: "consoleLog",
+          data: dataTosend,
+        });
+      }
+  
     }
-
   }
+  
 })
 

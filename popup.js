@@ -5,7 +5,6 @@ const stopRecordElement = document.getElementById("stopRecord");
 startRecordElement.style.display = "block";
 stopRecordElement.style.display = "none";
 
-
 chrome.storage.local.get("state", (data) => {
   if (data.state === "recording") {
     startRecordElement.style.display = "none";
