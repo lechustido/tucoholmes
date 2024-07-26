@@ -3,6 +3,10 @@ let version = "1.0";
 let server = "http://127.0.0.1:6789";
 const requests = new Map();
 let isRecording = false;
+//Contabilizador de segundos
+let timer = 0;
+//Almacena el intervalo de tiempo
+let interval;
 
 let sesionData = {};
 sesionData.consoleLogs = [];
@@ -14,6 +18,7 @@ sesionData.requests = [];
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     if (request.operation === "start" && tabs.length > 0) {
+      interval = setInterval(actualizarContador, 1000);
       isRecording = true;
       currentTabId = tabs[0].id;
       actualTab = currentTabId;
@@ -39,13 +44,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ status: 0 });
       this.screenRecorder();
     } else if (request.operation === "stop") {
+      clearInterval(interval);
+      this.intervalo = null;
       chrome.tabs.sendMessage(currentTabId, { type: "stopReadingConsole" });
       this.screenRecorder();
       this.onDetach();
       chrome.tabs.sendMessage(currentTabId, { type: "stopReadingConsole" });
       isRecording = false;
-    }else if(tabs.length === 0){
-      console.log('sin pestañas activas')
+    } else if (tabs.length === 0) {
+      console.log("sin pestañas activas");
     }
   });
 });
@@ -129,7 +136,6 @@ function allEventHandler(debuggeeId, message, params) {
       },
       function (response) {
         if (response) {
-          
           let newRequestData = {};
           request.set("response_body", response);
           requests.set(params.requestId, request);
@@ -139,10 +145,8 @@ function allEventHandler(debuggeeId, message, params) {
           newRequestData.method = values[0].method;
           newRequestData.response = values[3].body;
           sesionData.requests.push(newRequestData);
-        
-          requests.delete(params.requestId);
 
-         
+          requests.delete(params.requestId);
         } else {
           console.log("empty");
         }
@@ -201,35 +205,31 @@ async function screenRecorder() {
 
 //#region Obtener los datos de la consola
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  let consoleData = {
+    error: request.data,
+    timer:timer
+  }
   if (request.type === "consoleLog" && isRecording === true) {
-    sesionData.consoleLogs.push(request.data);
-  }else if(request.type === "consoleError" && isRecording === true){
-    sesionData.consoleError.push(request.data);
+    sesionData.consoleLogs.push(consoleData);
+  } else if (request.type === "consoleError" && isRecording === true) {
+    sesionData.consoleError.push(consoleData);
   }
 });
 //#endregion Obtener los datos de la consola
 
 
-/*chrome.runtime.onMessageExternal.addListener(function(message, sender, sendResponse) {
-  if (message.type === 'FROM_PAGE_ERROR') {
-    // Recibe los logs del mensaje
-    const logs = message.logs;
-    
-    // Puedes hacer algo con los logs, como imprimirlos en la consola
-    console.error('Error desde la página:', logs);
-    
-    // Envía una respuesta si es necesario
-    sendResponse({ received: true });
-  }
-});*/
-
-chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-  if (message.type === 'recordingComplete') {
-   // console.log('Video en Base64:', message.data);
-   sesionData.video = message.data
-    console.log(sesionData)
-    console.log(JSON.stringify(sesionData))
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+  if (message.type === "recordingComplete") {
+    // console.log('Video en Base64:', message.data);
+    let videoData = {
+      base64: message.data,
+      timer:timer
+    }
+    sesionData.video = videoData;
+    console.log(sesionData);
+    console.log(JSON.stringify(sesionData));
     sesionData = {};
+    timer = 0;
     sesionData.consoleLogs = [];
     sesionData.consoleError = [];
     sesionData.localStorage = {};
@@ -237,3 +237,9 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     // Aquí puedes hacer algo con el video en base64, como guardarlo o procesarlo.
   }
 });
+
+//#region Contabilizador de segundos de eventos
+const actualizarContador = () => {
+  timer++;
+};
+//#endregion Contabilizador de segundos de eventos
