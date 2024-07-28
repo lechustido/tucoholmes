@@ -144,6 +144,7 @@ function allEventHandler(debuggeeId, message, params) {
           newRequestData.url = values[0].url;
           newRequestData.method = values[0].method;
           newRequestData.response = values[3].body;
+          newRequestData.timer = timer;
           sesionData.requests.push(newRequestData);
 
           requests.delete(params.requestId);
@@ -205,6 +206,7 @@ async function screenRecorder() {
 
 //#region Obtener los datos de la consola
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  debugger
   let consoleData = {
     error: request.data,
     timer:timer
