@@ -24,7 +24,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       actualTab = currentTabId;
       chrome.tabs.sendMessage(currentTabId, { type: "getLocalStorage" });
       chrome.tabs.sendMessage(currentTabId, { type: "startReadingConsole" });
-
       if (currentTabId) {
         chrome.debugger.detach({ tabId: currentTabId });
       }
@@ -49,7 +48,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       chrome.tabs.sendMessage(currentTabId, { type: "stopReadingConsole" });
       this.screenRecorder();
       this.onDetach();
-      chrome.tabs.sendMessage(currentTabId, { type: "stopReadingConsole" });
       isRecording = false;
     } else if (tabs.length === 0) {
       console.log("sin pestañas activas");

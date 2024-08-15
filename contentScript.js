@@ -26,6 +26,8 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         },
         false
       );
+  }else if(message.type === "stopReadingConsole"){
+    window.postMessage({ type: "stopConsole"}, "*");
   }
 });
 script = document.createElement("script");
