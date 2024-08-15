@@ -7,13 +7,13 @@
   console.log = function (params) {
       var args = Array.prototype.slice.call(arguments);
       window.postMessage({ type: 'FROM_PAGE_LOG', logs: args });
-      // originalConsoleLog.apply(this, args); // Si deseas también mostrar el log en la consola
+      originalConsoleLog.apply(this, args); // Si deseas también mostrar el log en la consola
   };
 
   console.error = function () {
       var args = Array.prototype.slice.call(arguments);
       window.postMessage({ type: 'FROM_PAGE_ERROR', logs: args });
-      // originalConsoleError.apply(this, args); // Si deseas también mostrar el error en la consola
+       originalConsoleError.apply(this, args); // Si deseas también mostrar el error en la consola
   };
 
   // 3. Escuchar eventos para restaurar las funciones originales
