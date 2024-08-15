@@ -141,10 +141,14 @@ function allEventHandler(debuggeeId, message, params) {
           requests.set(params.requestId, request);
           var values = Array.from(request.values());
           newRequestData.headers = values[0].headers;
+          newRequestData.responseHeaders = values[1].headers;
           newRequestData.url = values[0].url;
           newRequestData.method = values[0].method;
           newRequestData.response = values[3].body;
           newRequestData.timer = timer;
+          if(newRequestData.method === 'POST'){
+            newRequestData.postData = values[0].postData;
+          }
           sesionData.requests.push(newRequestData);
 
           requests.delete(params.requestId);
@@ -206,7 +210,6 @@ async function screenRecorder() {
 
 //#region Obtener los datos de la consola
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  debugger
   let consoleData = {
     error: request.data,
     timer:timer
