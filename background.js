@@ -139,6 +139,8 @@ function allEventHandler(debuggeeId, message, params) {
           requests.set(params.requestId, request);
           var values = Array.from(request.values());
           newRequestData.headers = values[0].headers;
+          newRequestData.status = values[1].status;
+          newRequestData.timers = values[1].timing;
           newRequestData.responseHeaders = values[1].headers;
           newRequestData.url = values[0].url;
           newRequestData.method = values[0].method;
