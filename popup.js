@@ -17,7 +17,7 @@ startRecordElement.addEventListener("click", (e) => {
     startRecordElement.style.display = "none";
     stopRecordElement.style.display = "block";
     chrome.storage.local.set({ state: "recording" });
-  //  chrome.browserAction.setIcon({ path: 'icons/recording.png' });
+    chrome.action.setIcon({ path: 'icons/recording.png' });
     const response = await chrome.runtime.sendMessage({ operation: "start" });
   })();
 });
@@ -27,6 +27,7 @@ stopRecordElement.addEventListener("click", (e) => {
     startRecordElement.style.display = "block";
     stopRecordElement.style.display = "none";
     chrome.storage.local.set({ state: "stopped" });
+    chrome.action.setIcon({ path: 'images/holmes.png' });
     const response = await chrome.runtime.sendMessage({ operation: "stop" });
   })();
 });
