@@ -17,6 +17,7 @@ startRecordElement.addEventListener("click", (e) => {
     startRecordElement.style.display = "none";
     stopRecordElement.style.display = "block";
     chrome.storage.local.set({ state: "recording" });
+  //  chrome.browserAction.setIcon({ path: 'icons/recording.png' });
     const response = await chrome.runtime.sendMessage({ operation: "start" });
   })();
 });

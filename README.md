@@ -20,6 +20,7 @@ Tucoholmes es una extensión para Chrome que permite registrar todos los eventos
 ## Uso
 
 1. Haz clic en el icono de la extensión en la barra de herramientas de Chrome.
+2. La primera vez que instalas la extensión, deberás reiniciar la página en la que te encuentres para que se inyecten correctamente los ficheros necesarios.
 2. Utiliza los botones "Comenzar a grabar" y "Terminar de grabar" para controlar la grabación de eventos.
 
 ## Archivos Principales

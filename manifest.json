@@ -25,7 +25,8 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+      "recording": "icons/recording.png"
   },
   "content_scripts": [
     {
