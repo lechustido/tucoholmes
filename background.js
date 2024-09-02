@@ -1,4 +1,5 @@
 let currentTabId;
+let chatTabId;
 let version = "1.0";
 let server = "http://127.0.0.1:6789";
 const requests = new Map();
@@ -223,9 +224,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 //#endregion Obtener los datos de la consola
 
 
+//#region Generar los datos de la grabación de la pantalla
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.type === "recordingComplete") {
-    // console.log('Video en Base64:', message.data);
     let videoData = {
       base64: message.data,
       timer:timer
@@ -242,9 +243,78 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     // Aquí puedes hacer algo con el video en base64, como guardarlo o procesarlo.
   }
 });
+//#endregion Generar los datos de la grabación de la pantalla
 
 //#region Contabilizador de segundos de eventos
 const actualizarContador = () => {
   timer++;
 };
 //#endregion Contabilizador de segundos de eventos
+
+//#region Instalación de la libraría
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: "ask-for-help", 
+    title: "¡Ayudame a continuar!",
+    contexts: ["all"], 
+  });
+});
+//#endregion Instalación de la libraría
+
+
+//#region Callbacks de botones de menú
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === "ask-for-help") {
+    chatTabId = tab.id;
+    chrome.action.setPopup({
+      popup: './chat/popup-chat.html'  // Cambia al popup alternativo
+    });
+
+    // Luego, abre el popup (simulando un clic en el icono de la extensión)
+    chrome.action.openPopup();
+  }
+});
+
+//TODO: Refactorizar esto
+// Este listener y el cambio de color es para hacer un ejemplo práctico de la interacción entre el popup y el background.js,
+// debe ser refactorizado cuando se implemente la lógica real
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if(request.operation === 'updateDom'){
+    chrome.scripting.executeScript({
+      target: { tabId: chatTabId },
+      function: changeElementColor,
+      args:[ request.type]
+    });
+  }
+  
+});
+
+function changeElementColor(type) {
+  if(type === 'button'){
+    const button = [...document.querySelectorAll(type)].find(btn => btn.textContent.includes('Ir a formulario'));
+    if (button) {
+      button.style.backgroundColor = 'yellow';
+    }
+  }else if(type === 'form'){
+    const matInputs = document.querySelectorAll('mat-form-field, input');
+    console.log(matInputs)
+    matInputs.forEach(input => {
+        // Aplicar el color de fondo solo a los inputs dentro de mat-form-field
+        if (input.tagName === 'INPUT') {
+            input.style.backgroundColor = 'yellow';
+        } 
+    });
+  }
+
+}
+//Refactorizar esto
+
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  // Verificar si el cambio es una actualización de la URL
+  if (changeInfo.status === 'complete' && tab.url === "http://localhost:4200/ai-form") {
+    // Enviar un mensaje al popup
+    chrome.runtime.sendMessage({ action: "urlMatched" });
+}
+});
+//#endregion Callbacks de botones de menú

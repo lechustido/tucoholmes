@@ -19,7 +19,9 @@
     "debugger",
     "storage",
     "offscreen",
-    "tabCapture"
+    "tabCapture",
+    "contextMenus",
+    "scripting"
   ],
   "background": {
     "service_worker": "background.js"
